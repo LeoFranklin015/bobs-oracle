@@ -17,7 +17,6 @@ export default function Home() {
       <div className="absolute top-5 right-5 flex gap-4">
         <ConnectButton />
         <ModeToggle />
-
       </div>
       <div className="relative flex place-items-center">
         {/* <Image
@@ -36,6 +35,32 @@ export default function Home() {
 
       <section className="lg:max-w-5xl lg:w-full mt-12">
         <div className="ring-1 ring-zinc-700 rounded-xl p-8 w-full">
+          <form className="flex flex-col gap-4">
+            <label>Oracle Address</label>
+            <input
+              type="text"
+              placeholder="0x"
+              className="border border-zinc-700 p-4 rounded-lg"
+            />
+            <label>API</label>
+            <input
+              type="text"
+              placeholder="Enter your API"
+              className="border border-zinc-700 p-4 rounded-lg"
+            />
+            <label>API key</label>
+            <input
+              type="text"
+              placeholder="Enter your API key"
+              className="border border-zinc-700 p-4 rounded-lg"
+            />
+            <button
+              type="submit"
+              className="bg-white text-black p-4 rounded-lg"
+            >
+              Request
+            </button>
+          </form>
         </div>
       </section>
     </main>
