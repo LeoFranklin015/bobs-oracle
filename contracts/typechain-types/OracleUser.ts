@@ -14,7 +14,7 @@ import {
   Signer,
   utils,
 } from "ethers";
-import { FunctionFragment, Result } from "@ethersproject/abi";
+import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
@@ -46,8 +46,16 @@ export interface OracleUserInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "request", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "values", data: BytesLike): Result;
 
-  events: {};
+  events: {
+    "RequestMade(uint256)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "RequestMade"): EventFragment;
 }
+
+export type RequestMadeEvent = TypedEvent<[BigNumber], { id: BigNumber }>;
+
+export type RequestMadeEventFilter = TypedEventFilter<RequestMadeEvent>;
 
 export interface OracleUser extends BaseContract {
   contractName: "OracleUser";
@@ -122,7 +130,10 @@ export interface OracleUser extends BaseContract {
     values(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
   };
 
-  filters: {};
+  filters: {
+    "RequestMade(uint256)"(id?: BigNumberish | null): RequestMadeEventFilter;
+    RequestMade(id?: BigNumberish | null): RequestMadeEventFilter;
+  };
 
   estimateGas: {
     fullfillRequest(

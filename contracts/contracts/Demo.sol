@@ -6,6 +6,7 @@ import "./Oracle.sol";
 contract OracleUser {
     address oracleAddress;
     mapping(uint => string) public values;
+    event RequestMade(uint indexed id);
 
     constructor(address oracle) {
         oracleAddress = oracle;
@@ -18,6 +19,7 @@ contract OracleUser {
         Oracle oracle = Oracle(oracleAddress);
         // return only the return value from the oracle
         uint id = oracle.request(url, path, this.fullfillRequest.selector);
+        emit RequestMade(id);
         return id;
     }
 

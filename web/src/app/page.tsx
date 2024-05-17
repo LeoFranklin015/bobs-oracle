@@ -6,21 +6,38 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useReadContract,
+  useWatchContractEvent,
 } from "wagmi";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Badge } from "@/components/ui/badge";
 import { abi, contractAddress } from "../lib/constants";
+import { ethers } from "ethers";
 
 export default function Home() {
   const account = useAccount();
+
   const { writeContractAsync, error, data: hash } = useWriteContract();
+  const interfac = new ethers.Interface(abi);
 
   const [api, setApi] = useState("");
   const [key, setkey] = useState("");
-
-  useEffect(() => {}, []);
+  const [value, setValue] = useState(0);
+  const {
+    error: readError,
+    data: actualValue,
+    refetch,
+  } = useReadContract({
+    abi: abi,
+    address: contractAddress,
+    functionName: "values",
+    args: [value],
+  });
+  useEffect(() => {
+    refetch();
+  }, [value]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -38,10 +55,24 @@ export default function Home() {
 
     console.log(" args: ", args, account?.address);
   };
-  const { data: recipt } = useWaitForTransactionReceipt({
+
+  useWatchContractEvent({
+    abi: abi,
+    address: contractAddress,
+    eventName: "RequestMade",
+    onLogs(logs: any) {
+      console.log("new logs :", Number(logs[0].args.id));
+      setValue(Number(logs[0].args.id));
+    },
+  });
+
+  const {
+    data: recipt,
+    isFetched: fetched,
+    isLoading: loading,
+  } = useWaitForTransactionReceipt({
     hash,
   });
-  console.log(recipt);
 
   return (
     <main className="container flex min-h-screen flex-col items-center p-10">
@@ -100,17 +131,25 @@ export default function Home() {
               Request
             </button>
           </form>
+        </div>
+        <div className="ring-1 ring-zinc-700 rounded-xl p-8 w-full mt-10">
+          <div className="flex justify-between items-center">
+            <div className="text-2xl font-bold">Response</div>
+            <div>
+              <Badge
+                className={
+                  loading ? "bg-red-600" : fetched ? "bg-green-500" : ""
+                }
+              >
+                {loading ? "fetching" : fetched ? "fetched" : "Request"}
+              </Badge>
+            </div>
+          </div>
           {hash && <div className="text-white">Transaction Hash: {hash}</div>}
-          {/* {data && (
-            <div className="text-white">
-              Transaction Data: {JSON.stringify(data.data(), null, 2)}
-            </div>
-          )} */}
-          {recipt && (
-            <div className="text-white">
-              Transaction Receipt: {recipt.logs[0].data}
-            </div>
-          )}
+          {loading && <div className="text-white">Loading...</div>}
+
+          {fetched && <div>Value :{JSON.stringify(actualValue)}</div>}
+          {readError && <div>Value :{JSON.stringify(readError)}</div>}
         </div>
       </section>
     </main>
