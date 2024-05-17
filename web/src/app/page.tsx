@@ -25,10 +25,14 @@ export default function Home() {
   const [api, setApi] = useState("");
   const [key, setkey] = useState("");
   const [value, setValue] = useState(0);
+
+  const [requestLoading, setRequestLoading] = useState(false);
+
   const {
     error: readError,
     data: actualValue,
     refetch,
+    isFetching: readfetch,
   } = useReadContract({
     abi: abi,
     address: contractAddress,
@@ -37,11 +41,14 @@ export default function Home() {
   });
   useEffect(() => {
     refetch();
+    console.log(readfetch);
   }, [value]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setRequestLoading(true);
     const args = [api, key];
+    console.log("writing to contract");
     const data = await writeContractAsync({
       abi: abi,
       address: contractAddress,
@@ -53,9 +60,16 @@ export default function Home() {
       console.error("Error requesting: ", error);
     }
 
-    console.log(" args: ", args, account?.address);
+    setRequestLoading(false);
   };
 
+  const {
+    data: recipt,
+    isFetched: fetched,
+    isLoading: loading,
+  } = useWaitForTransactionReceipt({
+    hash,
+  });
   useWatchContractEvent({
     abi: abi,
     address: contractAddress,
@@ -64,14 +78,7 @@ export default function Home() {
       console.log("new logs :", Number(logs[0].args.id));
       setValue(Number(logs[0].args.id));
     },
-  });
-
-  const {
-    data: recipt,
-    isFetched: fetched,
-    isLoading: loading,
-  } = useWaitForTransactionReceipt({
-    hash,
+    pollingInterval: 1_000,
   });
 
   return (
@@ -126,7 +133,10 @@ export default function Home() {
             />
             <button
               type="submit"
-              className="bg-white text-black p-4 rounded-lg"
+              className={` text-black p-4 rounded-lg ${
+                requestLoading ? "bg-slate-500" : "bg-white"
+              }`}
+              disabled={requestLoading}
             >
               Request
             </button>
@@ -135,21 +145,36 @@ export default function Home() {
         <div className="ring-1 ring-zinc-700 rounded-xl p-8 w-full mt-10">
           <div className="flex justify-between items-center">
             <div className="text-2xl font-bold">Response</div>
-            <div>
+            <div className="flex items-center">
               <Badge
-                className={
-                  loading ? "bg-red-600" : fetched ? "bg-green-500" : ""
-                }
+                className={`
+          ${loading ? "bg-red-600" : fetched ? "bg-green-500" : "text-gray-400"}
+          px-3 py-2 rounded-full text-xs font-medium
+        `}
               >
-                {loading ? "fetching" : fetched ? "fetched" : "Request"}
+                {loading || readfetch
+                  ? "fetching"
+                  : fetched
+                  ? "fetched"
+                  : "Request"}
               </Badge>
             </div>
           </div>
           {hash && <div className="text-white">Transaction Hash: {hash}</div>}
-          {loading && <div className="text-white">Loading...</div>}
+          {loading ||
+            (readfetch && <div className="text-white">Loading...</div>)}
 
-          {fetched && <div>Value :{JSON.stringify(actualValue)}</div>}
-          {readError && <div>Value :{JSON.stringify(readError)}</div>}
+          {fetched && !readfetch && (
+            <div className="text-white">
+              Value of <span className=" font-bold">{key}</span> :{" "}
+              {JSON.stringify(actualValue, null, 2)}
+            </div>
+          )}
+          {readError && (
+            <div className="text-red-500">
+              Error: <pre>{JSON.stringify(readError, null, 2)}</pre>
+            </div>
+          )}
         </div>
       </section>
     </main>
