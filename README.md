@@ -52,3 +52,40 @@ Follow the readme.md to deploy your own oracle.
 - Viem
 - Solidity
 - Hardhat
+
+#### Get Started
+
+- Navigate to Server Folder
+ ```bash 
+yarn install
+
+```
+- Enter the necesary details such as privateKey and Oracle Address 
+ ```bash 
+yarn start
+
+```
+This will start the server 
+
+
+- navigate to web folder
+```bash 
+yarn install
+
+```
+- Enter the project id in env
+```bash 
+yarn run dev
+
+```
+
+
+- Open the site at localhost:3000
+- Enter the API and key of the value you want to get.
+- Example
+```ts
+API : https://jsonplaceholder.typicode.com/posts/1
+key : title 
+```
+
+this will request and fetch a title from the endpoint 
